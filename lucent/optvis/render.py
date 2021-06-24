@@ -90,6 +90,7 @@ def render_vis(
 
     images = []
     try:
+        loss_record = list()
         for i in tqdm(range(1, max(thresholds) + 1), disable=(not progress)):
             def closure():
                 optimizer.zero_grad()
@@ -108,9 +109,13 @@ def render_vis(
                         )
                 loss = objective_f(hook)
                 loss.backward()
+                loss_record.append(loss)
+                print(loss)
                 return loss
-                
+
             optimizer.step(closure)
+            print(objective_f(hook).cpu().detach().numpy())
+            loss_record.append(objective_f(hook).cpu().detach().numpy())
             if i in thresholds:
                 image = tensor_to_img_array(image_f())
                 if verbose:
@@ -130,7 +135,7 @@ def render_vis(
         show(tensor_to_img_array(image_f()))
     elif show_image:
         view(image_f())
-    return images
+    return images, loss_record
 
 
 def tensor_to_img_array(tensor):
